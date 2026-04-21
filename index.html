@@ -813,5 +813,10 @@ if (!firebaseConfig.apiKey) {
     .catch(err => showDbError('Auth fallita: ' + err.message));
 }
 </script>
+<script>
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('sw.js').catch(console.error);
+  }
+</script>
 </body>
 </html>
