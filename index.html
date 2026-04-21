@@ -1,0 +1,814 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="theme-color" content="#0c0a09">
+<title>Magazzino</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@600;700&display=swap" rel="stylesheet">
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+html, body { height: 100%; }
+body {
+  background: #0c0a09;
+  color: #fafaf9;
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  font-size: 15px;
+  line-height: 1.5;
+  padding-bottom: env(safe-area-inset-bottom, 20px);
+  -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
+}
+button, input { font-family: inherit; }
+
+.app { max-width: 640px; margin: 0 auto; padding: 20px 16px 40px; }
+
+header { margin-bottom: 18px; }
+h1 {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 26px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: #fafaf9;
+}
+.stats { color: #78716c; font-size: 13px; margin-top: 2px; }
+
+.search-wrap { position: relative; margin-bottom: 14px; }
+.search {
+  width: 100%;
+  background: #1c1917;
+  border: 1px solid #292524;
+  border-radius: 14px;
+  padding: 14px 44px 14px 44px;
+  color: #fafaf9;
+  font-size: 16px;
+  outline: none;
+  transition: border-color 0.15s;
+}
+.search:focus { border-color: #f59e0b; }
+.search::placeholder { color: #57534e; }
+.search-icon {
+  position: absolute; left: 14px; top: 50%; transform: translateY(-50%);
+  color: #78716c; pointer-events: none;
+}
+.search-clear {
+  position: absolute; right: 8px; top: 50%; transform: translateY(-50%);
+  width: 28px; height: 28px;
+  background: transparent; border: none; color: #78716c;
+  display: none; align-items: center; justify-content: center;
+  border-radius: 50%; cursor: pointer;
+}
+.search-clear.show { display: flex; }
+.search-clear:active { background: #292524; }
+
+.filters {
+  display: flex; gap: 6px; margin-bottom: 16px;
+  overflow-x: auto; padding-bottom: 2px;
+  scrollbar-width: none;
+}
+.filters::-webkit-scrollbar { display: none; }
+.chip {
+  flex-shrink: 0;
+  padding: 7px 13px;
+  background: #1c1917;
+  border: 1px solid #292524;
+  border-radius: 999px;
+  color: #a8a29e;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.chip.active { background: #fafaf9; color: #0c0a09; border-color: #fafaf9; }
+.filter-sep { width: 1px; background: #292524; align-self: stretch; margin: 4px 2px; flex-shrink: 0; }
+
+.section-label {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #78716c;
+  margin: 18px 4px 10px;
+}
+
+.card {
+  display: flex;
+  align-items: center;
+  background: #1c1917;
+  border: 1px solid #292524;
+  border-radius: 14px;
+  padding: 12px 12px 12px 18px;
+  margin-bottom: 8px;
+  position: relative;
+  overflow: hidden;
+  transition: opacity 0.15s, background 0.15s;
+}
+.card::before {
+  content: '';
+  position: absolute;
+  left: 0; top: 0; bottom: 0;
+  width: 4px;
+  background: var(--cat-color, #f59e0b);
+}
+.card.cibo { --cat-color: #f97316; }
+.card.casa { --cat-color: #06b6d4; }
+.card.gatti { --cat-color: #a855f7; }
+
+.card-info { flex: 1; min-width: 0; cursor: pointer; padding: 2px 0; }
+.card-name {
+  font-size: 15px;
+  font-weight: 600;
+  color: #fafaf9;
+  line-height: 1.3;
+  word-break: break-word;
+}
+.card-meta {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  margin-top: 3px;
+  font-size: 12px;
+  color: #78716c;
+}
+.card-meta .dot { opacity: 0.5; }
+
+.qty-control {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  flex-shrink: 0;
+  margin-left: 8px;
+}
+.qty-btn {
+  width: 36px; height: 36px;
+  background: #292524;
+  border: none;
+  border-radius: 10px;
+  color: #fafaf9;
+  font-size: 20px;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.1s, transform 0.05s;
+  line-height: 1;
+}
+.qty-btn:active { background: #44403c; transform: scale(0.94); }
+.qty-btn.minus { color: #f59e0b; }
+.qty-val {
+  min-width: 30px;
+  text-align: center;
+  font-family: 'Space Grotesk', sans-serif;
+  font-weight: 700;
+  font-size: 17px;
+}
+.card.archived { opacity: 0.55; }
+.card.archived .qty-val { color: #78716c; }
+.card.archived::before { opacity: 0.5; }
+
+.empty {
+  text-align: center;
+  padding: 60px 20px 40px;
+  color: #78716c;
+}
+.empty-icon { font-size: 44px; margin-bottom: 10px; }
+.empty-hint { font-size: 13px; margin-top: 4px; color: #57534e; }
+
+.hint {
+  text-align: center;
+  font-size: 12px;
+  color: #57534e;
+  padding: 28px 20px 10px;
+}
+
+.add-new {
+  width: 100%;
+  background: #f59e0b;
+  color: #0c0a09;
+  border: none;
+  padding: 14px;
+  border-radius: 12px;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  margin-bottom: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  transition: background 0.1s;
+}
+.add-new:active { background: #fbbf24; }
+
+/* Modal / bottom sheet */
+.modal {
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,0.55);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  z-index: 100;
+  opacity: 0; pointer-events: none;
+  transition: opacity 0.2s;
+}
+.modal.show { opacity: 1; pointer-events: auto; }
+
+.sheet {
+  width: 100%;
+  max-width: 640px;
+  background: #1c1917;
+  border-top: 1px solid #292524;
+  border-radius: 20px 20px 0 0;
+  padding: 12px 20px 28px;
+  transform: translateY(100%);
+  transition: transform 0.28s cubic-bezier(0.2, 0.9, 0.3, 1);
+  max-height: 92vh;
+  overflow-y: auto;
+  padding-bottom: calc(28px + env(safe-area-inset-bottom, 0px));
+}
+.modal.show .sheet { transform: translateY(0); }
+
+.sheet-handle {
+  width: 40px; height: 4px;
+  background: #44403c;
+  border-radius: 2px;
+  margin: 4px auto 14px;
+}
+
+.sheet h2 {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 19px;
+  font-weight: 700;
+  margin-bottom: 18px;
+}
+
+.field { margin-bottom: 14px; }
+.field label {
+  display: block;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: #78716c;
+  margin-bottom: 8px;
+}
+.field input {
+  width: 100%;
+  background: #0c0a09;
+  border: 1px solid #292524;
+  border-radius: 10px;
+  padding: 12px 14px;
+  color: #fafaf9;
+  font-size: 16px;
+  outline: none;
+}
+.field input:focus { border-color: #f59e0b; }
+
+.chip-group { display: flex; gap: 8px; flex-wrap: wrap; }
+.chip-opt {
+  flex: 1;
+  padding: 11px 10px;
+  background: #0c0a09;
+  border: 1px solid #292524;
+  border-radius: 10px;
+  color: #a8a29e;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s;
+  white-space: nowrap;
+  min-width: 0;
+}
+.chip-opt.sel { color: #fafaf9; }
+.chip-opt.sel[data-cat="cibo"] { border-color: #f97316; background: rgba(249,115,22,0.14); }
+.chip-opt.sel[data-cat="casa"] { border-color: #06b6d4; background: rgba(6,182,212,0.14); }
+.chip-opt.sel[data-cat="gatti"] { border-color: #a855f7; background: rgba(168,85,247,0.14); }
+.chip-opt.sel[data-loc] { border-color: #f59e0b; background: rgba(245,158,11,0.12); }
+
+.qty-input {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.qty-input .qty-val { font-size: 22px; min-width: 44px; }
+
+.actions { display: flex; gap: 10px; margin-top: 22px; }
+.btn {
+  flex: 1;
+  padding: 14px;
+  border: none;
+  border-radius: 12px;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.1s;
+}
+.btn-primary { background: #f59e0b; color: #0c0a09; }
+.btn-primary:active { background: #fbbf24; }
+.btn-primary:disabled { background: #44403c; color: #78716c; cursor: not-allowed; }
+.btn-secondary { background: #292524; color: #fafaf9; }
+.btn-secondary:active { background: #44403c; }
+
+.delete-link {
+  display: block;
+  width: 100%;
+  text-align: center;
+  background: transparent;
+  border: none;
+  color: #ef4444;
+  font-size: 13px;
+  font-weight: 500;
+  padding: 14px;
+  margin-top: 4px;
+  cursor: pointer;
+  opacity: 0.75;
+}
+.delete-link:active { opacity: 1; }
+
+.toast {
+  position: fixed;
+  bottom: 24px; left: 50%;
+  transform: translate(-50%, 120px);
+  background: #1c1917;
+  border: 1px solid #44403c;
+  padding: 10px 16px;
+  border-radius: 12px;
+  font-size: 14px;
+  transition: transform 0.25s cubic-bezier(0.2, 0.9, 0.3, 1);
+  z-index: 200;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.3);
+}
+.toast.show { transform: translate(-50%, 0); }
+
+.loading {
+  text-align: center;
+  padding: 60px 20px;
+  color: #78716c;
+  font-size: 14px;
+}
+.err {
+  margin: 16px 0;
+  padding: 12px 14px;
+  background: rgba(239,68,68,0.1);
+  border: 1px solid rgba(239,68,68,0.3);
+  border-radius: 10px;
+  color: #fca5a5;
+  font-size: 13px;
+}
+</style>
+</head>
+<body>
+
+<div class="app">
+  <header>
+    <h1>Magazzino</h1>
+    <div class="stats" id="stats">Caricamento…</div>
+  </header>
+
+  <div class="search-wrap">
+    <svg class="search-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+    <input class="search" id="search" placeholder="Cerca o aggiungi un prodotto…" autocomplete="off" autocapitalize="sentences" />
+    <button class="search-clear" id="search-clear" aria-label="Pulisci">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+    </button>
+  </div>
+
+  <div class="filters" id="filters">
+    <button class="chip active" data-cat="all">Tutti</button>
+    <button class="chip" data-cat="cibo">Cibo</button>
+    <button class="chip" data-cat="casa">Casa</button>
+    <button class="chip" data-cat="gatti">Gatti</button>
+    <span class="filter-sep"></span>
+    <button class="chip active" data-loc="all">Ovunque</button>
+    <button class="chip" data-loc="mobiletto">Mobiletto</button>
+    <button class="chip" data-loc="scaffale">Scaffale</button>
+  </div>
+
+  <div id="content">
+    <div class="loading">Caricamento…</div>
+  </div>
+</div>
+
+<div class="modal" id="modal">
+  <div class="sheet">
+    <div class="sheet-handle"></div>
+    <h2 id="sheet-title">Nuovo prodotto</h2>
+
+    <div class="field">
+      <label>Nome</label>
+      <input id="new-name" type="text" autocomplete="off" autocapitalize="sentences" />
+    </div>
+
+    <div class="field">
+      <label>Categoria</label>
+      <div class="chip-group" id="cat-group">
+        <button class="chip-opt" data-cat="cibo">🍝 Cibo</button>
+        <button class="chip-opt" data-cat="casa">🧼 Casa</button>
+        <button class="chip-opt" data-cat="gatti">🐱 Gatti</button>
+      </div>
+    </div>
+
+    <div class="field">
+      <label>Posizione</label>
+      <div class="chip-group" id="loc-group">
+        <button class="chip-opt" data-loc="mobiletto">Mobiletto</button>
+        <button class="chip-opt" data-loc="scaffale">Scaffale</button>
+      </div>
+    </div>
+
+    <div class="field">
+      <label>Quantità</label>
+      <div class="qty-input">
+        <button class="qty-btn minus" id="qty-minus">−</button>
+        <span class="qty-val" id="qty-val">1</span>
+        <button class="qty-btn plus" id="qty-plus">+</button>
+      </div>
+    </div>
+
+    <div class="actions">
+      <button class="btn btn-secondary" id="cancel">Annulla</button>
+      <button class="btn btn-primary" id="save">Aggiungi</button>
+    </div>
+
+    <button class="delete-link" id="delete-btn" style="display:none;">Elimina prodotto</button>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getDatabase, ref, onValue, push, update, remove, set } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+
+// ============================================================
+// ⚠️  INSERISCI QUI LA TUA CONFIG FIREBASE
+// ============================================================
+const firebaseConfig = {
+  apiKey: "",
+  authDomain: "",
+  databaseURL: "",
+  projectId: "",
+  storageBucket: "",
+  messagingSenderId: "",
+  appId: ""
+};
+// ============================================================
+
+const app = initializeApp(firebaseConfig);
+const db = getDatabase(app);
+const auth = getAuth(app);
+
+// State
+let products = {};
+let filterCat = 'all';
+let filterLoc = 'all';
+let searchTerm = '';
+let editingId = null;
+let draft = { name: '', category: null, location: null, quantity: 1 };
+let loaded = false;
+
+// Elements
+const $ = id => document.getElementById(id);
+const contentEl = $('content');
+const searchEl = $('search');
+const searchClearEl = $('search-clear');
+const statsEl = $('stats');
+const modalEl = $('modal');
+const sheetTitle = $('sheet-title');
+const nameInput = $('new-name');
+const toastEl = $('toast');
+const saveBtn = $('save');
+const deleteBtn = $('delete-btn');
+
+// Helpers
+function toast(msg) {
+  toastEl.textContent = msg;
+  toastEl.classList.add('show');
+  clearTimeout(window.__toastT);
+  window.__toastT = setTimeout(() => toastEl.classList.remove('show'), 1800);
+}
+function normalize(s) { return (s || '').toString().trim().toLowerCase().replace(/\s+/g, ' '); }
+function escapeHtml(s) {
+  return (s + '').replace(/[&<>"']/g, c => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c]));
+}
+function catLabel(cat) { return ({ cibo: 'Cibo', casa: 'Casa', gatti: 'Gatti' })[cat] || cat; }
+function locLabel(loc) { return ({ mobiletto: 'Mobiletto', scaffale: 'Scaffale' })[loc] || loc; }
+
+function findExisting(name) {
+  const n = normalize(name);
+  for (const [id, p] of Object.entries(products)) {
+    if (normalize(p.name) === n) return { id, ...p };
+  }
+  return null;
+}
+
+// Firebase ops
+async function changeQty(id, delta) {
+  const p = products[id];
+  if (!p) return;
+  const newQty = Math.max(0, (p.quantity || 0) + delta);
+  try {
+    await update(ref(db, 'products/' + id), { quantity: newQty, updatedAt: Date.now() });
+  } catch (e) { toast('Errore: ' + e.message); }
+}
+
+async function saveProduct() {
+  const name = draft.name.trim();
+  if (!name) return toast('Dai un nome al prodotto');
+  if (!draft.category) return toast('Scegli una categoria');
+  if (!draft.location) return toast('Scegli una posizione');
+  saveBtn.disabled = true;
+
+  try {
+    if (editingId) {
+      await update(ref(db, 'products/' + editingId), {
+        name,
+        category: draft.category,
+        location: draft.location,
+        quantity: Math.max(0, draft.quantity | 0),
+        updatedAt: Date.now()
+      });
+      toast('Salvato');
+    } else {
+      // Creating: merge if a product with same name already exists
+      const existing = findExisting(name);
+      if (existing) {
+        const addQty = Math.max(1, draft.quantity | 0);
+        const newQty = (existing.quantity || 0) + addQty;
+        await update(ref(db, 'products/' + existing.id), {
+          quantity: newQty,
+          category: draft.category,
+          location: draft.location,
+          updatedAt: Date.now()
+        });
+        toast(`${existing.name}: ora ${newQty}`);
+      } else {
+        const newRef = push(ref(db, 'products'));
+        await set(newRef, {
+          name,
+          category: draft.category,
+          location: draft.location,
+          quantity: Math.max(1, draft.quantity | 0),
+          createdAt: Date.now(),
+          updatedAt: Date.now()
+        });
+        toast('Aggiunto');
+      }
+    }
+    searchEl.value = '';
+    searchTerm = '';
+    searchClearEl.classList.remove('show');
+    closeModal();
+    render();
+  } catch (e) {
+    toast('Errore: ' + e.message);
+  } finally {
+    saveBtn.disabled = false;
+  }
+}
+
+async function deleteProduct() {
+  if (!editingId) return;
+  const p = products[editingId];
+  if (!confirm(`Eliminare "${p?.name}" definitivamente?`)) return;
+  try {
+    await remove(ref(db, 'products/' + editingId));
+    toast('Eliminato');
+    closeModal();
+  } catch (e) { toast('Errore: ' + e.message); }
+}
+
+// Modal
+function openModal(productId = null, prefillName = '') {
+  editingId = productId;
+  if (productId) {
+    const p = products[productId];
+    if (!p) return;
+    sheetTitle.textContent = 'Modifica prodotto';
+    draft = { name: p.name, category: p.category, location: p.location, quantity: p.quantity || 0 };
+    saveBtn.textContent = 'Salva';
+    deleteBtn.style.display = 'block';
+  } else {
+    sheetTitle.textContent = 'Nuovo prodotto';
+    draft = { name: prefillName, category: null, location: null, quantity: 1 };
+    saveBtn.textContent = 'Aggiungi';
+    deleteBtn.style.display = 'none';
+  }
+  nameInput.value = draft.name;
+  updateChips();
+  $('qty-val').textContent = draft.quantity;
+  modalEl.classList.add('show');
+  if (!productId) setTimeout(() => nameInput.focus(), 280);
+}
+function closeModal() {
+  modalEl.classList.remove('show');
+  editingId = null;
+}
+function updateChips() {
+  document.querySelectorAll('#cat-group .chip-opt').forEach(el => {
+    el.classList.toggle('sel', el.dataset.cat === draft.category);
+  });
+  document.querySelectorAll('#loc-group .chip-opt').forEach(el => {
+    el.classList.toggle('sel', el.dataset.loc === draft.location);
+  });
+}
+
+// Modal event wiring
+document.querySelectorAll('#cat-group .chip-opt').forEach(el => {
+  el.addEventListener('click', () => { draft.category = el.dataset.cat; updateChips(); });
+});
+document.querySelectorAll('#loc-group .chip-opt').forEach(el => {
+  el.addEventListener('click', () => { draft.location = el.dataset.loc; updateChips(); });
+});
+nameInput.addEventListener('input', () => { draft.name = nameInput.value; });
+$('qty-minus').addEventListener('click', () => {
+  draft.quantity = Math.max(0, draft.quantity - 1);
+  $('qty-val').textContent = draft.quantity;
+});
+$('qty-plus').addEventListener('click', () => {
+  draft.quantity = draft.quantity + 1;
+  $('qty-val').textContent = draft.quantity;
+});
+$('cancel').addEventListener('click', closeModal);
+saveBtn.addEventListener('click', saveProduct);
+deleteBtn.addEventListener('click', deleteProduct);
+modalEl.addEventListener('click', e => { if (e.target === modalEl) closeModal(); });
+
+// Filters
+document.querySelectorAll('#filters .chip').forEach(el => {
+  el.addEventListener('click', () => {
+    if (el.dataset.cat !== undefined) {
+      filterCat = el.dataset.cat;
+      document.querySelectorAll('#filters .chip[data-cat]').forEach(x => x.classList.toggle('active', x.dataset.cat === filterCat));
+    } else {
+      filterLoc = el.dataset.loc;
+      document.querySelectorAll('#filters .chip[data-loc]').forEach(x => x.classList.toggle('active', x.dataset.loc === filterLoc));
+    }
+    render();
+  });
+});
+
+// Search
+searchEl.addEventListener('input', () => {
+  searchTerm = searchEl.value;
+  searchClearEl.classList.toggle('show', !!searchTerm);
+  render();
+});
+searchClearEl.addEventListener('click', () => {
+  searchEl.value = '';
+  searchTerm = '';
+  searchClearEl.classList.remove('show');
+  searchEl.focus();
+  render();
+});
+
+// Render
+function sectionLabel(text) {
+  const el = document.createElement('div');
+  el.className = 'section-label';
+  el.textContent = text;
+  return el;
+}
+
+function renderCard(p, archived = false) {
+  const el = document.createElement('div');
+  el.className = 'card ' + (p.category || '') + (archived ? ' archived' : '');
+  el.innerHTML = `
+    <div class="card-info">
+      <div class="card-name">${escapeHtml(p.name)}</div>
+      <div class="card-meta">
+        <span>${escapeHtml(catLabel(p.category))}</span>
+        <span class="dot">·</span>
+        <span>${escapeHtml(locLabel(p.location))}</span>
+      </div>
+    </div>
+    <div class="qty-control">
+      <button class="qty-btn minus" data-act="dec" aria-label="Togli uno">−</button>
+      <span class="qty-val">${p.quantity || 0}</span>
+      <button class="qty-btn plus" data-act="inc" aria-label="Aggiungi uno">+</button>
+    </div>
+  `;
+  el.querySelector('[data-act="dec"]').addEventListener('click', e => {
+    e.stopPropagation();
+    changeQty(p.id, -1);
+  });
+  el.querySelector('[data-act="inc"]').addEventListener('click', e => {
+    e.stopPropagation();
+    changeQty(p.id, +1);
+  });
+  el.querySelector('.card-info').addEventListener('click', () => openModal(p.id));
+  return el;
+}
+
+function render() {
+  if (!loaded) return;
+  const term = normalize(searchTerm);
+  const all = Object.entries(products).map(([id, p]) => ({ id, ...p }));
+  const inStock = all.filter(p => (p.quantity || 0) > 0);
+  const outOfStock = all.filter(p => (p.quantity || 0) === 0);
+  const totalItems = inStock.reduce((s, p) => s + (p.quantity || 0), 0);
+  statsEl.textContent = inStock.length === 0
+    ? 'Magazzino vuoto'
+    : `${inStock.length} ${inStock.length === 1 ? 'articolo' : 'articoli'} · ${totalItems} ${totalItems === 1 ? 'pezzo' : 'pezzi'}`;
+
+  contentEl.innerHTML = '';
+
+  // SEARCH MODE
+  if (term) {
+    const matchIn = inStock.filter(p => normalize(p.name).includes(term))
+      .sort((a, b) => a.name.localeCompare(b.name, 'it'));
+    const matchOut = outOfStock.filter(p => normalize(p.name).includes(term))
+      .sort((a, b) => a.name.localeCompare(b.name, 'it'));
+    const exact = findExisting(searchTerm);
+
+    if (!exact) {
+      const btn = document.createElement('button');
+      btn.className = 'add-new';
+      btn.innerHTML = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg> Aggiungi "${escapeHtml(searchTerm.trim())}"`;
+      btn.addEventListener('click', () => openModal(null, searchTerm.trim()));
+      contentEl.appendChild(btn);
+    }
+    if (matchIn.length) {
+      contentEl.appendChild(sectionLabel('In magazzino'));
+      matchIn.forEach(p => contentEl.appendChild(renderCard(p)));
+    }
+    if (matchOut.length) {
+      contentEl.appendChild(sectionLabel('Aggiunti in passato · ora esauriti'));
+      matchOut.forEach(p => contentEl.appendChild(renderCard(p, true)));
+    }
+    if (!matchIn.length && !matchOut.length && exact) {
+      contentEl.appendChild(renderCard(exact, (exact.quantity || 0) === 0));
+    }
+    return;
+  }
+
+  // NORMAL MODE
+  let list = inStock;
+  if (filterCat !== 'all') list = list.filter(p => p.category === filterCat);
+  if (filterLoc !== 'all') list = list.filter(p => p.location === filterLoc);
+
+  const catOrder = { cibo: 0, casa: 1, gatti: 2 };
+  list.sort((a, b) => {
+    const ca = catOrder[a.category] ?? 99;
+    const cb = catOrder[b.category] ?? 99;
+    if (ca !== cb) return ca - cb;
+    return a.name.localeCompare(b.name, 'it');
+  });
+
+  if (list.length === 0) {
+    if (inStock.length === 0) {
+      contentEl.innerHTML = `<div class="empty"><div class="empty-icon">📦</div><div>Magazzino vuoto</div><div class="empty-hint">Inizia scrivendo nella barra di ricerca per aggiungere il primo prodotto.</div></div>`;
+    } else {
+      contentEl.innerHTML = `<div class="empty"><div>Nessun prodotto con questi filtri</div></div>`;
+    }
+    return;
+  }
+
+  if (filterCat === 'all') {
+    let lastCat = null;
+    list.forEach(p => {
+      if (p.category !== lastCat) {
+        contentEl.appendChild(sectionLabel(catLabel(p.category)));
+        lastCat = p.category;
+      }
+      contentEl.appendChild(renderCard(p));
+    });
+  } else {
+    list.forEach(p => contentEl.appendChild(renderCard(p)));
+  }
+
+  if (outOfStock.length) {
+    const hint = document.createElement('div');
+    hint.className = 'hint';
+    hint.textContent = `${outOfStock.length} ${outOfStock.length === 1 ? 'prodotto esaurito' : 'prodotti esauriti'} — cerca per nome per ripristinarli`;
+    contentEl.appendChild(hint);
+  }
+}
+
+// Init
+function showDbError(msg) {
+  contentEl.innerHTML = `<div class="err"><strong>Errore:</strong> ${escapeHtml(msg)}<br><br>Controlla la config Firebase in cima al file e le regole del database.</div>`;
+}
+
+if (!firebaseConfig.apiKey) {
+  showDbError('Config Firebase non impostata. Apri il file HTML e incolla il tuo firebaseConfig.');
+} else {
+  signInAnonymously(auth)
+    .then(() => {
+      onValue(ref(db, 'products'), snap => {
+        products = snap.val() || {};
+        loaded = true;
+        render();
+      }, err => showDbError(err.message));
+    })
+    .catch(err => showDbError('Auth fallita: ' + err.message));
+}
+</script>
+</body>
+</html>
